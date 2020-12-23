@@ -352,17 +352,17 @@ data &lt;- as.data.frame(data)</code></pre>
   return(output)
 }</code></pre>
 <pre class="r"><code>mylm(y ~ x1 + x2 + x3, data = data)</code></pre>
-<pre><code>##               Estimate Std. Error   t value  Pr(&gt;|t|)
-## (Intercept) -2.2590853  0.2834270 -7.970607 0.0000000
-## x1           0.4472388  0.2574890  1.736924 0.0856419
-## x2           0.1133069  0.0126117  8.984294 0.0000000
-## x3          -0.4819829  0.1669284 -2.887363 0.0048101</code></pre>
+<pre><code>##               Estimate Std. Error    t value  Pr(&gt;|t|)
+## (Intercept) -2.1118618  0.3267483 -6.4632672 0.0000000
+## x1           0.0943907  0.2487987  0.3793858 0.7052481
+## x2           0.1200298  0.0133846  8.9677804 0.0000000
+## x3          -0.5160787  0.1575281 -3.2761052 0.0014700</code></pre>
 <pre class="r"><code>summary(lm(y ~ x1 + x2 + x3, data = data))$coef</code></pre>
-<pre><code>##               Estimate Std. Error   t value     Pr(&gt;|t|)
-## (Intercept) -2.2590853 0.28342702 -7.970607 3.278339e-12
-## x1           0.4472388 0.25748898  1.736924 8.560809e-02
-## x2           0.1133069 0.01261166  8.984294 2.261010e-14
-## x3          -0.4819829 0.16692840 -2.887363 4.799948e-03</code></pre>
+<pre><code>##               Estimate Std. Error    t value     Pr(&gt;|t|)
+## (Intercept) -2.1118618 0.32674833 -6.4632672 4.247804e-09
+## x1           0.0943907 0.24879871  0.3793858 7.052393e-01
+## x2           0.1200298 0.01338457  8.9677804 2.453118e-14
+## x3          -0.5160787 0.15752811 -3.2761052 1.465269e-03</code></pre>
 </div>
 <div id="task-2" class="section level1">
 <h1>Task 2:</h1>
@@ -394,9 +394,7 @@ colnames(output) &lt;- c(&quot;Res.Df&quot;, &quot;RSS&quot;, &quot;Df&quot;, &q
  output &lt;- as.data.frame(output)
  return(output)
 }</code></pre>
-<pre class="r"><code>link &lt;- &#39;https://raw.githubusercontent.com/gdlc/STAT_COMP/master/goutData.txt&#39;
-DATA=read.table(link, header=TRUE,sep=&#39;&#39;)
-write.csv(DATA, &quot;su-gout.csv&quot;)</code></pre>
+<pre class="r"><code>DATA &lt;- read.csv(&quot;https://raw.githubusercontent.com/despresj/portfolio/main/su-gout.csv&quot;)</code></pre>
 <pre class="r"><code>fit0 &lt;- lm(su ~ race + age, DATA)
 fit1 &lt;- lm(su ~ race + age + race * sex, DATA)
 
