@@ -6,6 +6,9 @@ navbar:
       href: index.html
     - text: "About"
       href: about.html
+    - text: "Statistical Computation"
+      href: my_lm.html
+    
 output:
   html_document:
     theme: darkly
