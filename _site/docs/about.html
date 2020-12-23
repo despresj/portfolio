@@ -11,7 +11,7 @@
 
 
 
-<title>Rewrite lm() and anova()</title>
+<title>My cats have a website!</title>
 
 <script src="site_libs/header-attrs-2.6.4/header-attrs.js"></script>
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
@@ -303,120 +303,12 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Rewrite lm() and anova()</h1>
+<h1 class="title toc-ignore">My cats have a website!</h1>
 
 </div>
 
 
-<div id="task-1" class="section level1">
-<h1>Task 1:</h1>
-<p>Rewrite the <code>lm()</code> function that returns output similar to <code>summary(lm())$coef</code></p>
-<pre class="r"><code># make some fake data
-n=100
-  b=c(4,-4,3)
-  p=length(b)
-  x1=rnorm(n)
-  x2=runif(n)
-  x3=rbinom(n,size=1,prob=.3)
-  signal=20+cbind(x1,x2,x3)%*%b
-  error=rnorm(n=n,sd=sd(signal))
-  y=signal+error
-data &lt;- cbind(x1,x2,y, x3)
-colnames(data) &lt;- c(&quot;y&quot;, &quot;x1&quot;, &quot;x2&quot;, &quot;x3&quot;)
-data &lt;- as.data.frame(data)</code></pre>
-<pre class="r"><code>mylm &lt;- function (formula, data, rounding = 7) {
-  
-  formula &lt;- gsub(&quot;[[:space:]]&quot;, &quot;&quot;, deparse(formula))
-  vars &lt;- strsplit(formula, &quot;[[:punct:]]&quot;)[[1]]
-     
-  y &lt;- data[,vars[1]]
-  A &lt;- data.matrix(cbind(1, data[,vars[-1]]))
-  
-  betahat &lt;- solve(crossprod(A)) %*% t(A) %*% y
-  betahat &lt;- as.vector(betahat)
-  RSS &lt;- t(y - (A %*% betahat)) %*% (y - (A %*% betahat))
-  MSE &lt;-  as.numeric(RSS) / (nrow(A) - length(vars))
-  var_betaHat &lt;- MSE * solve(crossprod(A))
 
-  se_vec &lt;- sqrt(diag(var_betaHat))
-   t_vec &lt;- betahat / se_vec
-   p_val &lt;- pt(abs(t_vec), df = nrow(data) - ncol(data) - 1, lower.tail = F) * 2
-
-  output &lt;- data.frame(round(betahat, rounding), round(se_vec, rounding), 
-                          round(t_vec, rounding), round(p_val, rounding))
-
-  colnames(output) &lt;- c(&quot;Estimate&quot;, &quot;Std. Error&quot;, &quot;t value&quot;, &quot;Pr(&gt;|t|)&quot;)
-  rownames(output) &lt;- c(&quot;(Intercept)&quot;, vars[-1])
-  output &lt;- as.matrix(output)
-
-  return(output)
-}</code></pre>
-<pre class="r"><code>mylm(y ~ x1 + x2 + x3, data = data)</code></pre>
-<pre><code>##               Estimate Std. Error    t value  Pr(&gt;|t|)
-## (Intercept) -2.1040340  0.2942168 -7.1513036 0.0000000
-## x1           0.1157848  0.2250784  0.5144199 0.6081531
-## x2           0.1120502  0.0125552  8.9246010 0.0000000
-## x3          -0.4976503  0.1596159 -3.1177993 0.0024113</code></pre>
-<pre class="r"><code>summary(lm(y ~ x1 + x2 + x3, data = data))$coef</code></pre>
-<pre><code>##               Estimate Std. Error    t value     Pr(&gt;|t|)
-## (Intercept) -2.1040340 0.29421685 -7.1513036 1.694241e-10
-## x1           0.1157848 0.22507840  0.5144199 6.081407e-01
-## x2           0.1120502 0.01255521  8.9246010 3.036006e-14
-## x3          -0.4976503 0.15961589 -3.1177993 2.404727e-03</code></pre>
-</div>
-<div id="task-2" class="section level1">
-<h1>Task 2:</h1>
-<p>Rewrite the <code>anova()</code> function that returns output similar to <code>print(anova())</code></p>
-<pre class="r"><code>myanova &lt;- function (fit0, fit1, rounding = 3) {
-
-RSS0 &lt;- sum(residuals(fit0)^2)
-RSS1 &lt;- sum(residuals(fit1)^2)
-MSS  &lt;- RSS0 - RSS1
-n &lt;- length(residuals(fit0))
-
-df0 &lt;- length(coef(fit1)) - length(coef(fit0))
-df1 &lt;- n - length(coef(fit1))
-
-Fstat &lt;- (MSS / df0) / (RSS1 / df1)
-pval  &lt;- pf(Fstat, df1 = df0, df2 = df1, lower.tail = FALSE)
-res.df &lt;- c(df1, n - df0 -1)
-one &lt;- c(round(c(n - df0 - 1, RSS0), rounding), rep(&quot;&quot;, 4))
-two &lt;- c(df1, RSS1, df0, RSS0 - RSS1, Fstat, pval)
-
-model1 &lt;- c(paste(&quot;model 1:&quot;, deparse(formula(fit0))))
-model2 &lt;- c(paste(&quot;model 2:&quot;, deparse(formula(fit1))))
-
-output &lt;- rbind(one, round(two, rounding), deparse.level = 0)
-colnames(output) &lt;- c(&quot;Res.Df&quot;, &quot;RSS&quot;, &quot;Df&quot;, &quot;Sum of Sq&quot;, &quot;F&quot;, &quot;Pr(&gt;F)&quot;)
- cat(&quot;Analysis of Variance Table\n&quot;)
- cat(paste(&quot;\nmodel 1:&quot;, deparse(formula(fit0))))
- cat(paste(&quot;\nmodel 2:&quot;, deparse(formula(fit1))))
- output &lt;- as.data.frame(output)
- return(output)
-}</code></pre>
-<pre class="r"><code>DATA &lt;- read.csv(&quot;https://raw.githubusercontent.com/despresj/portfolio/main/su-gout.csv&quot;)</code></pre>
-<pre class="r"><code>fit0 &lt;- lm(su ~ race + age, DATA)
-fit1 &lt;- lm(su ~ race + age + race * sex, DATA)
-
-myanova(fit0, fit1)</code></pre>
-<pre><code>## Analysis of Variance Table
-## 
-## model 1: su ~ race + age
-## model 2: su ~ race + age + race * sex</code></pre>
-<pre><code>##   Res.Df      RSS Df Sum of Sq      F Pr(&gt;F)
-## 1    397 1019.107                           
-## 2    395  788.357  2    230.75 57.808      0</code></pre>
-<pre class="r"><code>print(anova(fit0, fit1))</code></pre>
-<pre><code>## Analysis of Variance Table
-## 
-## Model 1: su ~ race + age
-## Model 2: su ~ race + age + race * sex
-##   Res.Df     RSS Df Sum of Sq      F    Pr(&gt;F)    
-## 1    397 1019.11                                  
-## 2    395  788.36  2    230.75 57.808 &lt; 2.2e-16 ***
-## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
-</div>
 
 
 
