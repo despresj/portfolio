@@ -95,9 +95,7 @@ colnames(output) <- c("Res.Df", "RSS", "Df", "Sum of Sq", "F", "Pr(>F)")
 ```
 
 ```{r}
-link <- 'https://raw.githubusercontent.com/gdlc/STAT_COMP/master/goutData.txt'
-DATA=read.table(link, header=TRUE,sep='')
-write.csv(DATA, "su-gout.csv")
+DATA <- read.csv("https://raw.githubusercontent.com/despresj/portfolio/main/su-gout.csv")
 ```
 
 ```{r}
