@@ -1,5 +1,0 @@
----
-title: "My Website"
----
-    
-Hello, here is a collection of some of my work. This is a work in progress.
