@@ -1,3 +1,0 @@
----
-title: "My cats have a website!"
----
