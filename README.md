@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 | Link to Project     | Description | Language|Application|
 | ----------- | :----------- |----- |-----|
@@ -17,3 +18,6 @@
 | inprogress      | Extracts email from copied text |Python|Productivity|
 | inprogress   | Extracts US formatted phone numbers and email addresses from clipboard |Python|Productivity|
 | inprogress   | Extracts US formatted phone numbers from clipboard|Python|Productivity|
+=======
+Code Samples
+>>>>>>> d1cb99025fc1f577db3234d64ea16766409ecab5
