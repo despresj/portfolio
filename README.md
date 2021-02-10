@@ -10,7 +10,6 @@
 | [cleaningscript.R](https://github.com/despresj/portfolio/blob/main/R/cleaningscript.R)| Reading and cleaning Gapminder Data |R| Data Wrangling|
 | [stock_forcasting.Rmd](https://github.com/despresj/portfolio/blob/main/R/stock_forcasting.Rmd) | Evaluating forecasting methods using stock market data|R| Forecasting|
 | [random_interval_timer.R](https://github.com/despresj/portfolio/blob/main/R/random_interval_timer.R) | Random interval timer |R|Productivity|
-|   | Searches Google maps from clipboard |Python|Productivity|
 | [password_generator.py](https://github.com/despresj/portfolio/blob/main/Python/password_generator.py) | Password generator and manager |Python| Password Generator|
 | [password_generator_ret.py](https://github.com/despresj/portfolio/blob/main/Python/password_generator_ret.py) | Retrieves generated password |Python| Password Generator|
 | [symbolRemover.py](https://github.com/despresj/portfolio/blob/main/Python/symbolRemover.py) | Removes '>' symbol from copied text|Python|Productivity|
