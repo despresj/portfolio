@@ -1,8 +1,7 @@
-<<<<<<< HEAD
 
 | Link to Project     | Description | Language|Application|
 | ----------- | :----------- |----- |-----|
-| in-progress      | "bootstrapping_logistic_reg.Rmd" |R| Statistical Computation|
+| in-progress      | Bootstrapping Logistic Regression |R| Statistical Computation|
 | in-progress   | False detection Rate |R| Statistical Computation|
 | in-progress   | Monte Carlo Simulation |R| Statistical Computation|
 | in-progress      | Rewriting lm() function in R |R| Statistical Computation|
@@ -18,6 +17,3 @@
 | inprogress      | Extracts email from copied text |Python|Productivity|
 | inprogress   | Extracts US formatted phone numbers and email addresses from clipboard |Python|Productivity|
 | inprogress   | Extracts US formatted phone numbers from clipboard|Python|Productivity|
-=======
-Code Samples
->>>>>>> d1cb99025fc1f577db3234d64ea16766409ecab5
