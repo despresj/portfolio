@@ -1,0 +1,232 @@
+---
+title: "Code Samples"
+author: "Joe Despres"
+date: "`r format(Sys.time(), 'Updated: %B %dth, %Y')`"
+output:
+  pdf_document: default
+  html_document: default
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+theme_set(theme_light())
+```
+
+# 1. Random Interval Timer
+While exercising, I found myself wanting a timer that would select a time between three and eight minutes at random. When I was unable to find one, I wrote a function for it.
+
+```{r interval_timer, eval=FALSE}
+random_interval_timer <- function(rounds = 10, rest = 30, min_time = 2.5, max_time = 7.5){
+  
+  min_time <- (min_time * 60) - 30
+  max_time <- (max_time * 60) - 30
+  # convert minutes to seconds and subtract 30 to account for 30 second notice
+  for(i in 1:rounds){
+    if(i == 1){
+    system(paste(
+      "say Random Interval Between", round(min_time / 60 ,0), "and", 
+      round(max_time / 60 ,0), "Minutes, Begin round", i))
+    }  else{
+      system(paste("say begin round", i))
+      }
+beepr::beep(1)  
+time <- runif(1, min_time , max_time)
+# runif generates a number at random between min_time and max_time
+print(paste(round(time/60, 2), "minutes"))
+Sys.sleep(time)
+
+system("say Thirty Seconds Remaining")
+Sys.sleep(30)
+beepr::beep(1)  
+
+system(paste("say", round(time/60, 1), "Minute Round Complete:", 
+             round(rest, 0), "Seconds to Rest"))
+Sys.sleep(rest)
+beepr::beep(1)  
+  }
+}
+random_interval_timer()
+```
+
+***
+\newpage
+
+# 2. Evaluating the Robustness of Forecasts
+Here is an evaluation of forecasting methods discussed in ["Forecasting Principles and Practice""]("https://otexts.com/fpp2/holt-winters.html") by Rob J Hyndman and George Athanasopoulos. The goal is to write a function that will quantify the performance of the basic forecasting methods on stocks from the S&P500. After reading in data, I will make a list of time series objects by ticker symbol. Then, make a list of training data by removing the last 20 closing prices in the sequence. Run the forecasts for each method on each stock and evaluate the results in aggregate to compare methods.
+
+```{r loading-data, include=F}
+library(tidyverse)
+library(fpp2)
+stocks <- read_csv("https://raw.githubusercontent.com/despresj/ECO-401/master/stocks.csv") 
+```
+#### Wrangling with purrr  
+
+```{r wrangle}
+stock_list <- stocks %>% 
+  split(.$ticker) %>% 
+  map(list("price.close"))
+
+ts_stocks <- stock_list %>%
+  map(~ts( . , start = 1, end = length(stock_list$A), frequency = 365))
+
+training <- ts_stocks %>% 
+  map(~ subset( . , start = 1, end = length(stock_list$A) - 20))
+```
+
+#### Defining Metrics Mathematically and Intuitively  
+
+$\text{Root Mean Squared Error} ={\sqrt {\frac {\sum _{t=1}^{T}({\hat{y}}_{t}-y_{t})^{2}}{N}}}$
+**The larger this number is the greater total distance is between what actually happened and our forecast.**
+
+$\text{Mean Absolute Error} ={\frac {\sum _{t=1}^{N}{\hat{y}}_{t}-y_{t}}{N}}$  
+**This is determining the average of the distance from the forecast to the actual and squaring that. Naturally the smaller this is the better the forecast was.**
+
+$\text{Mean Percentage Error}={\frac  {100\%}{N}}\sum _{{t=1}}^{N}{\frac{{\hat{y}}-y_{t}}{\hat{y}}}$  
+**This metric measures the average percentage the forecast was away from the actual. The lower this number is the better.**
+
+$\text{Mean Absolute Scaled Error} ={\frac {{\frac {1}{t}}\sum _{t}\left|e_{t}\right|}{{\frac {1}{N-1}}\sum _{t=2}^{N}\left|{\hat{y}}_{t}-y_{t-1}\right|}}$  
+**This gives an average of each error as a ratio of the compared to the average of the baseline error**
+
+\newpage
+
+#### Defining the Function
+This function will return a tibble comprised of metrics that evaluate and compare the performance of the forecasts.
+
+```{r define-function}
+crystal_ball <- function(training_data, actual_data, forecast_horizon = 20){
+       # run the variable through each forecasting method
+  mean_method                  <-  meanf(training_data, h = forecast_horizon)
+  naive_method                 <-  naive(training_data, h = forecast_horizon)
+  holt_method                  <-  holt(training_data , h = forecast_horizon)
+  holt_method_damped           <-  holt(training_data , h = forecast_horizon, damped = TRUE)
+        # test the accuracy of the forecasts against the actual data
+  mean_method_accuracy         <-  accuracy(mean_method,   actual_data)
+  naive_method_accuracy        <-  accuracy(naive_method,  actual_data)
+  holt_method_accuracy         <-  accuracy(holt_method,   actual_data)
+  holt_method_damped_accuracy  <-  accuracy(holt_method_damped, actual_data)
+        # convert these lists into a tibble
+    rbind(
+        # Mean Method  
+    mean_method_accuracy %>%
+    broom::tidy() %>%
+    mutate(.rownames = replace(.rownames, .rownames == "Test set", "Mean")) %>%
+    filter(.rownames == "Mean"),
+        # Naive
+    naive_method_accuracy %>%
+    broom::tidy() %>%
+    mutate(.rownames = replace(.rownames, .rownames == "Test set", "Naïeve")) %>%
+    filter(.rownames == "Naïeve"),
+        # Holts
+    holt_method_accuracy %>%
+    broom::tidy() %>%
+    mutate(.rownames = replace(.rownames, .rownames == "Test set", "Holts")) %>%
+    filter(.rownames == "Holts"), 
+        # Holt's Damped
+    holt_method_damped_accuracy  %>%
+    broom::tidy() %>%
+    mutate(.rownames = replace(.rownames, .rownames == "Test set", "Holts_Damped")) %>%
+    filter(.rownames == "Holts_Damped")) %>%
+        # change acronyms to full names
+    rename(
+    `Mean Absolute Scaled Error` = MASE,
+    `Root Mean Squared Error`  = RMSE,
+    `Mean Percentage Error` = MPE,
+    `Mean Absolute Error` = MAE,
+     Method = .rownames
+    ) %>% # remove metrics not defined
+  select(-ME,-Theil.s.U, -MAPE, -ACF1)
+}
+```
+
+```{r run-function, eval=TRUE, cache=TRUE}
+perfromance <- map2(training, ts_stocks, crystal_ball) %>%
+  bind_rows(.id = "id")
+```
+
+\newpage
+
+Of the metrics defined above, I focus on *Mean Percentage Error* because it has a very intuitive interpretation. For instance, the average distance between between the forecast and the actual is 6% on average. 
+
+```{r Visualizing-errors, echo=FALSE}
+perfromance %>% 
+  ggplot(aes(x = `Mean Percentage Error`, fill = abs(`Mean Percentage Error`) < 3)) + 
+  geom_histogram(binwidth = 2, show.legend = T) + 
+    scale_fill_manual(values=c("#ae0c00", "3fff00"), 
+                      name = "", labels = c("Greater than 3%", "Less than 3%")) + 
+                      facet_wrap( ~Method, scales = "free_x") + 
+  labs(title = "Visualizing the Distribution of Forecast Errors", y = "") + 
+  theme(legend.position = "bottom")
+```
+
+```{r summary-stats}
+perfromance %>% 
+  group_by(Method) %>% 
+    summarise(
+    Median  = median(`Mean Percentage Error`),
+      Mean  = mean  (`Mean Percentage Error`),
+  `Minimum` = min   (`Mean Percentage Error`),
+  `Maximum` = max   (`Mean Percentage Error`),
+ `Std. Dev` = sd    (`Mean Percentage Error`)) %>% 
+  mutate_if(is.numeric, round, 2) %>% 
+  kableExtra::kable(caption = "Mean Percentage Error by Method") %>%
+  kableExtra::kable_styling(font_size = 9, latex_options = "hold_position", full_width = TRUE)
+```
+
+***
+\newpage
+
+# 3 Here is a function I wrote to read data that accompanied our textbook's homework problems.
+
+```{r}
+book_data <- function(chapter, problem, PR = PR){
+  
+link <- "http://www.cnachtsheim-text.csom.umn.edu/"
+link <- paste0(link, "/Kutner/Chapter%20%201%20Data%20Sets/CH0", 
+         chapter, "PR", problem,".txt"  )
+ data <- read.table(link,  header = FALSE, sep = "")
+ colnames(data) <- setNames(nm = c(paste0("X", seq_along(data) - 1)))
+ colnames(data)[1] <- "Y"
+ 
+  return(data)
+}
+sample_data <- book_data(chapter = 1, problem = 22)
+head(sample_data)
+```
+
+# Rewriting LM
+
+```{r mylm}
+mylm <- function (formula, data, rounding = 7) {
+  
+  formula <- gsub("[[:space:]]", "", deparse(formula))
+  vars <- strsplit(formula, "[[:punct:]]")[[1]]
+     
+  y <- data[,vars[1]]
+  A <- data.matrix(cbind(1, data[,vars[-1]]))
+  
+  betahat <- solve(crossprod(A)) %*% t(A) %*% y
+  betahat <- as.vector(betahat)
+  RSS <- t(y - (A %*% betahat)) %*% (y - (A %*% betahat))
+  MSE <-  as.numeric(RSS) / (nrow(A) - length(vars))
+  var_betaHat <- MSE * solve(crossprod(A))
+
+  se_vec <- sqrt(diag(var_betaHat))
+   t_vec <- betahat / se_vec
+   p_val <- pt(abs(t_vec), df = nrow(data) - ncol(data) - 1, lower.tail = F) * 2
+
+  output <- data.frame(round(betahat, rounding), round(se_vec, rounding), 
+                          round(t_vec, rounding), round(p_val, rounding))
+
+  colnames(output) <- c("Estimate", "Std. Error", "t value", "Pr(>|t|)")
+  rownames(output) <- c("(Intercept)", vars[-1])
+  output <- as.matrix(output)
+
+  return(output)
+}
+
+mylm(mpg ~ cyl + qsec + carb, data = mtcars)
+```
+
+
+
+

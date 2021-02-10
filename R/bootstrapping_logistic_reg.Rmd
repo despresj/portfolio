@@ -1,0 +1,172 @@
+---
+title: "Homework 2"
+author: "Joe Despres"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  pdf_document: default
+  html_document: default
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1 Predicting confidence bands for logistic regression using Bootstrap
+Use 500 Bootstrap samples to create a 95% confidence band for predicted risk by level of SU
+```{r 1, cache=TRUE}
+DATA <- read.table("https://raw.githubusercontent.com/gdlc/STAT_COMP/master/goutData.txt",
+  header = TRUE
+)
+DATA$y <- ifelse(DATA$gout == "Y", 1, 0)
+su.grid <- seq(from = 4, to = 10, by = .1)
+fm <- glm(y ~ su, data = DATA, family = "binomial")
+phat <- predict(fm, newdata = data.frame(su = su.grid), type = "response")
+
+nrow <- length(su.grid)
+ncol <- 500
+PHAT <- matrix(nrow = nrow, ncol = ncol)
+for (i in 1:ncol) {
+  TMP <- DATA[sample(1:ncol, replace = TRUE), ]
+  fm <- glm(y ~ su, data = TMP, family = "binomial")
+  PHAT[, i] <- predict(fm, newdata = data.frame(su = su.grid), type = "response")
+}
+cband <- apply(PHAT, FUN = quantile, MARGIN = 1, prob = c(.025, .975))
+plot(phat ~ su.grid,
+  col = 2, xlab = "Serum Urate", ylab = "P(Gout)", type = "l", lwd = 2,
+  ylim = c(0, .35), main = "Probability of Gout as a Function of Serum Urate Levels"
+)
+lines(cband[1, ] ~ su.grid, type = "l", col = "blue", lwd = 1, lty = 2)
+lines(cband[2, ] ~ su.grid, type = "l", col = "blue", lwd = 1, lty = 2)
+legend(4, 0.3,
+  legend = c( "95% C.I.", "Prediction"),
+  col = c("blue", "red"), lty = 2:1
+)
+```
+
+
+------------------------------------------------------------------------
+
+# 2 Maximum likelihood estimation and inference with the exponential distribution
+
+```{r 2}
+set.seed(195021)
+rand_nums <- rexp(50, 2)
+```
+
+### 2.1 Optimize function
+
+Use optimize() to estimate $\lambda$ compare your estimate with xbar.
+
+```{r 2.1a}
+likely_fn <- function(lambda, obs) -sum(dexp(obs, lambda, log = TRUE))
+estimate <- optimize(likely_fn, c(0, 5), obs = rand_nums, maximum = F)$minimum
+compare_est <- c(estimate, 1/mean(rand_nums))
+names(compare_est) <- c("Estimate", "1/xbar")
+compare_est
+all.equal(1/mean(rand_nums), estimate)
+```
+
+```{r 2.1b, eval=FALSE, include=FALSE, inclue=FALSE}
+# B
+likely_fnb <- function(lambda, n, m) -(lambda^n) * exp(-lambda * n * m)
+estimateb <- 1/optimize(likely_fnb, c(0, 10), n = 50, m = mean(rand_nums), maximum = F)$minimum
+all.equal(mean(rand_nums), estimateb)
+c(1/mean(rand_nums), estimate, 1/estimateb)
+```
+
+### 2.2
+
+Use numerical methods to provide an approximate 95% CI for your estimate.
+
+```{r, 2.2}
+hess <- numDeriv::hessian(func = likely_fn, x = 1 / estimate, obs = rand_nums)
+hess_se <- diag(sqrt(solve(hess)))
+conf_int <- estimate + c(-1, 0, 1) * 1.96 * hess_se
+names(conf_int) <- c("2.5%", "Mean", "97.5%")
+conf_int
+```
+
+------------------------------------------------------------------------
+
+# 3
+
+#### 3.1
+
+Use 10,000 bootstrap samples to estimate the SE. Compare your results with those reported in the previous question.
+
+```{r 3.1}
+bootstrap_means <- rep(NA, 10000)
+for (i in 1:length(bootstrap_means)) {
+  sample <- sample(rand_nums, length(rand_nums), replace = TRUE)
+  bootstrap_means[i] <- mean(sample)
+}
+
+bootstrap_se <- sd(bootstrap_means)
+lims <- quantile(x = bootstrap_means, probs = c(0.025, .975))
+lims <- as.vector(lims)
+
+hist(bootstrap_means, main = "Bootstrapped Means", col = "lightblue", breaks = 30)
+abline(v = lims[1], lty = 2, lwd = 1, col = "Blue")
+abline(v = lims[2], lty = 2, lwd = 1, col = "Blue")
+text(lims[1], 800, "2.5%")
+text(lims[2], 800, "97.5%")
+```
+
+```{r, 3.1b}
+ci <- c(hess_se, mean(bootstrap_se))
+names(ci) <- c("Hessian SE", "Bootstrapped SE")
+ci
+```
+
+Here we can see that the standard error that we obtained by bootstrapping is close but slightly smaller than the one obtained with the hessian matrix. 
+
+#### 3.2
+Report 95% CI assuming normality using the SE from question 2 and the SE from 3.1, and compare these CI's with those obtained with the percentile method
+
+```{r 3.2}
+boot_conf <- estimate + c(-1, 0, 1) * 1.96 * bootstrap_se
+ci <- as.data.frame(rbind(boot_conf, conf_int))
+names(ci) <- c("2.5%", "Mean", "97.5%")
+ci
+```
+Here we can see that the confidence interval with the bootstrapped standard error is slightly tighter than the one with the Hessian. 
+
+#### 3.3
+
+Compare the estimate obtained with the sample, with the average Bootstrap estimate. Do we have any evidence that the estimator may be biased?
+
+```{r 3.3a}
+estimates <- as.data.frame(rbind(c(estimate, 1 / mean(bootstrap_means), 1 / mean(rand_nums))))
+names(estimates) <- c("Optimize", "Bootstrapped", "Sample Estimate")
+estimates
+```
+
+If the mean is different than the expected value it would suggest a biased estimate. We know our $\lambda$ value is 2, so our estimate of `r round(estimate[1],2)` seems high. However, this is a random sample of 50 and since we controlled the numbers this happens to be high due to chance. Our estimate remains close to the sample mean, so we do not have evidence to suggesting a biased estimate. 
+
+To indulge curiosity and address the question of bias, let's generate new numbers random numbers with different seeds. We shall see if the estimate is bias by estimating lambda by repeated sampling. Here we will take 100000 samples and see if the mean estimate converges to 1 / lambda value (0.5). 
+
+```{r 3.3b, cache=TRUE}
+repeated_estimate <- c()
+for (i in 1:1e5) {
+  rand_nums <- rexp(50, 2)
+  repeated_estimate[i] <- 1 / optimize(likely_fn, c(0, 5), obs = rand_nums)$minimum
+}
+```
+
+```{r 3.3c}
+plot(repeated_estimate, pch = 20, lwd = 0.5)
+abline(h = 1/2, col = "green", lwd = 6)
+abline(h = mean(repeated_estimate), col = "red", lwd = 2)
+
+hist(repeated_estimate, breaks = 50, main = "", col = "grey")
+abline(v = 1/2, col = "green", lwd = 6)
+abline(v = mean(repeated_estimate), col = "red", lwd = 2)
+```
+Here are two plots that show our estimate converging to the parameter over repeated samples. In green is our parameter 1 / lambda (0.5) and in red is our mean estimate from 100,000 samples. The fact that the mean estimate is right in the center of our parameter shows that this is an unabased estimator. 
+<!-- _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- -->
+
+```{r eval=FALSE, include=FALSE}
+styler:::style_active_file()
+```
