@@ -3,7 +3,7 @@
 | Link to Project     | Description | Language|Application|
 | ----------- | :----------- |----- |-----|
 | [bootstrapping_logistic_reg.Rmd](https://github.com/despresj/portfolio/blob/main/R/bootstrapping_logistic_reg.Rmd) | Bootstrapping Logistic Regression |R| Statistical Computation|
-| [genomics.Rmd](https://github.com/despresj/portfolio/blob/main/R/genomics.Rmd)| False detection Rate |R| Statistical Computation|
+| [genomics.Rmd](https://github.com/despresj/portfolio/blob/main/R/genomics.Rmd)| False Discovery Rate |R| Statistical Computation|
 | [monte_carlo_methods.Rmd](https://github.com/despresj/portfolio/blob/main/R/monte_carlo_methods.Rmd) | Monte Carlo Simulation |R| Statistical Computation|
 | [my_lm.Rmd](https://github.com/despresj/portfolio/blob/main/R/my_lm.Rmd) | Rewriting lm() function in R |R| Statistical Computation|
 | [gauss_seidel_algo.R](https://github.com/despresj/portfolio/blob/main/R/gauss_seidel_algo.R) | Gauss–Seidel method for inverting a matrix |R| Algorithm|
