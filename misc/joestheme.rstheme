@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 /* rs-theme-name: joestheme1 */ 
+=======
+/* rs-theme-name: joestheme */ 
+>>>>>>> 93c1a485c9e640243cf0b13d6907b1e2fcc2a2ed
 /* rs-theme-is-dark: TRUE */ 
 
 .ace_gutter {
