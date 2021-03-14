@@ -15,3 +15,5 @@
 | [symbolRemover.py](https://github.com/despresj/portfolio/blob/main/Python/symbolRemover.py)                        | Removes '>' symbol from copied text                     | Python   | Productivity            |
 | [numpyexplore.py](https://github.com/despresj/portfolio/blob/main/Python/numpyexplore.py)                          | Exploring Numpy                                         | Python   | Data Analysis           |
 | [codeToText.py](https://github.com/despresj/portfolio/blob/main/Python/codeToText.py)                              | Put all code contained in a directory into one .md file | Python   | File managment          | 
+
+![cleaning](pics/cleaning.jpg)
