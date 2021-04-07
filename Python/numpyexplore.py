@@ -23,11 +23,11 @@ def my_reg(formula, data):
     XtXt = XtX.dot(X.T)
     return XtXt.dot(y)
 
-coefs = my_reg('mpg ~ cyl', cars)
+coefs1 = my_reg('mpg ~ cyl', cars)
 coefs1
 
-coefs = my_reg('mpg ~ cyl + disp', cars)
+coefs2 = my_reg('mpg ~ cyl + disp', cars)
 coefs2
 
-coefs = my_reg('mpg ~ cyl + disp + hp', cars)
+coefs3 = my_reg('mpg ~ cyl + hp', cars)
 coefs3
