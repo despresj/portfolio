@@ -1,58 +1,37 @@
 #! /usr/bin/python3
-'''
-detects current website, generates a random password, and saves the password to a file to be retrieved
-'''
 
 import random, pyperclip, beepy
 from re import search
 from subprocess import Popen, PIPE 
 
-cmd = "/usr/bin/osascript -e 'tell application \"Safari\"' -e 'get the URL of current tab of window 1' -e 'end tell'"
+def get_safari_url():
+    cmd = "/usr/bin/osascript -e 'tell application \"Safari\"' -e 'get the URL of current tab of window 1' -e 'end tell'"
+    pipe = Popen(cmd, shell=True, stdout=PIPE).stdout
+    url = pipe.readlines()
+    return url[0]
 
-pipe = Popen(cmd, shell=True, stdout=PIPE).stdout
-url = pipe.readlines()
-url = str(url)
-url = search('https?://([A-Za-z_0-9.-]+).*', url)
+def random_pass(n=20):
+    random_pass = []
+    upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    lower = upper.lower()
+    digits = "0123456789"
+    symbols = "(){}[].:;'!@#$%^&*_-+="
+    while len(random_pass) <= n:  
+        letter = random.sample(upper, 1) + random.sample(lower, 1)
+        addnum = letter + random.sample(digits, 1) 
+        addsym = addnum + random.sample(symbols, 1)
+        random_pass += random.sample(addsym, 4)
+    random_pass = random.sample(random_pass, n)
+    return "".join(random_pass)
+    
+web = get_safari_url()
+password = random_pass()
 
-uppercase_letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-lowercase_letters = uppercase_letters.lower()
-digits = "0123456789"
-symbols = "(){}[].:;'!@#$%^&*_-+="
-upper, lower, nums, syms = True, True, True, True
-
-all = ""
-
-if upper:
-    all += uppercase_letters
-if lower:
-    all += lowercase_letters
-if nums:
-    all += digits
-if syms:
-    all += symbols
-
-for _ in range(10):
-    all = "".join(random.sample(all, len(all)))
-
-# make sure one of each is present
-start = []
-start += random.sample(lowercase_letters, 1)
-start += random.sample(uppercase_letters, 1)
-start += random.sample(digits, 1)
-start += random.sample(symbols, 1)
-password = ''.join(start)
-
-length = random.randrange(11, 16)
-password += "".join(random.sample(all, length))
-
-my_password_location = []
+out_path # enviroment variable
+pyperclip.copy(password)
+text = web + "," + password + "\n"
 
 try:
-    url = url.group(1)
-    pyperclip.copy(password)
-    text = url + "," + password + "\n"
-    open(my_password_location, "a").write(text)
-
-except: 
-    beepy.beep(3)    
-
+    open(out_path, "a").write(text)
+except FileNotFoundError:
+    beepy.beep(3)
